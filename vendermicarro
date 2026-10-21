@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vendetucarro.com.do | Venta de vehículos usados en República Dominicana</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        drblue: {
+                            50: '#f0f4f9',
+                            100: '#dbe5f2',
+                            500: '#002D62',
+                            600: '#00234d',
+                            700: '#001a3a',
+                            800: '#001126',
+                            900: '#000914',
+                        },
+                        drred: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#CE1126',
+                            600: '#b00e1f',
+                            700: '#910a19',
+                        },
+                        whatsapp: {
+                            500: '#25D366',
+                            600: '#128C7E',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Lista oficial completa de las 32 demarcaciones de República Dominicana
+        const ALL_DOMINICAN_PROVINCES = [
+            "Distrito Nacional",
+            "Azua",
+            "Baoruco",
+            "Barahona",
+            "Dajabón",
+            "Duarte",
+            "El Seibo",
+            "Elías Piña",
+            "Espaillat",
+            "Hato Mayor",
+            "Hermanas Mirabal",
+            "Independencia",
+            "La Altagracia",
+            "La Romana",
+            "La Vega",
+            "María Trinidad Sánchez",
+            "Monseñor Nouel",
+            "Monte Cristi",
+            "Monte Plata",
+            "Pedernales",
+            "Peravia",
+            "Puerto Plata",
+            "Samaná",
+            "San Cristóbal",
+            "San José de Ocoa",
+            "San Juan",
+            "San Pedro de Macorís",
+            "Sánchez Ramírez",
+            "Santiago",
+            "Santiago Rodríguez",
+            "Santo Domingo",
+            "Valverde"
+        ];
+
+        // Catálogo exhaustivo de Marcas y sus Modelos populares en Rep. Dom.
+        const BRANDS_AND_MODELS = {
+            "Toyota": ["Camry", "Corolla", "RAV4", "Hilux", "Highlander", "Land Cruiser", "Prado", "4Runner", "Yaris", "Tacoma", "Fortuner", "Sienna", "C-HR", "Rush", "Prius", "Sequoia", "Tundra", "Vitz", "Passo", "Raize"],
+            "Honda": ["Civic", "CR-V", "Accord", "Pilot", "HR-V", "Fit", "Odyssey", "Ridgeline", "Passport", "City", "WR-V", "Insight"],
+            "Hyundai": ["Sonata", "Tucson", "Santa Fe", "Elantra", "Accent", "Kona", "Palisade", "Venice", "Grand i10", "Staria", "Creta", "Veloster", "H-1 / Starex"],
+            "Kia": ["Picanto", "K5 / Optima", "Sportage", "Sorento", "Seltos", "Rio", "Forte / Cerato", "Carnival / Sedona", "Soul", "Stinger", "Telluride", "Sonet"],
+            "Nissan": ["Frontier", "Kicks", "Sentra", "Qashqai", "X-Trail", "Pathfinder", "Versa", "Murano", "March", "Armada", "Note", "Patrol", "Navara"],
+            "Ford": ["Explorer", "F-150", "Ranger", "Escape", "Edge", "Expedition", "Mustang", "EcoSport", "Bronco", "Bronco Sport", "Everest", "Transit"],
+            "Chevrolet": ["Tahoe", "Suburban", "Colorado", "Trax", "Equinox", "Traverse", "Silverado", "Tracker", "Aveo", "Spark", "Camaro", "Blazer"],
+            "BMW": ["Serie 3", "Serie 5", "Serie 4", "X1", "X3", "X5", "X6", "X7", "Serie 1", "Serie 7", "M3", "M5"],
+            "Mercedes-Benz": ["Clase C", "Clase E", "Clase S", "GLC", "GLE", "GLS", "GLA", "CLA", "Clase G", "GLB", "Sprinter"],
+            "Jeep": ["Wrangler", "Grand Cherokee", "Cherokee", "Compass", "Renegade", "Gladiator", "Commander"],
+            "Audi": ["A3", "A4", "A6", "Q3", "Q5", "Q7", "Q8", "A5", "e-tron"],
+            "Lexus": ["RX 350", "GX 460", "LX 570", "LX 600", "IS 250", "ES 350", "NX 200t", "UX 200"],
+            "Mitsubishi": ["Montero", "Montero Sport", "L200", "Outlander", "ASX", "Mirage", "Eclipse Cross"],
+            "Mazda": ["CX-5", "CX-30", "CX-9", "Mazda 3", "Mazda 6", "BT-50", "CX-3", "CX-90"],
+            "Subaru": ["Forester", "Outback", "Crosstrek", "Impreza", "XV", "WRX"],
+            "Volkswagen": ["Jetta", "Tiguan", "Atlas", "Golf", "Amarok", "Polo", "Taos", "T-Cross"],
+            "Suzuki": ["Grand Vitara", "Jimny", "Swift", "Vitara", "Baleno", "S-Cross", "Alto"],
+            "Peugeot": ["2008", "3008", "5008", "208", "308", "Partner"],
+            "Land Rover": ["Range Rover", "Range Rover Sport", "Range Rover Evoque", "Discovery", "Defender", "Velar"],
+            "Porsche": ["Cayenne", "Macan", "911", "Panamera", "Taycan"]
+        };
+
+        const BRAND_LIST = Object.keys(BRANDS_AND_MODELS);
+
+        const INITIAL_VEHICLES = [
+            {
+                id: 1,
+                title: "Toyota Camry SE",
+                brand: "Toyota",
+                model: "Camry",
+                year: 2020,
+                priceDOP: 1450000,
+                priceUSD: 24500,
+                currency: "USD",
+                province: "Distrito Nacional",
+                transmission: "Automática",
+                fuel: "Gasolina",
+                condition: "Recién Importado",
+                mileage: "42,000 mi",
+                engine: "2.5L 4 Cyl",
+                color: "Blanco Perla",
+                sellerName: "Auto Import Bella Vista",
+                sellerPhone: "8095550199",
+                whatsapp: "18095550199",
+                status: "Disponible",
+                featured: true,
+                images: [
+                    "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=80",
+                    "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=80"
+                ],
+                description: "Clean Carfax, recién importado. Piel impecable, aros 18\", cámara de reversa, Apple CarPlay y sunroof. Papeles al día."
+            },
+            {
+                id: 2,
+                title: "Honda Civic EX",
+                brand: "Honda",
+                model: "Civic",
+                year: 2019,
+                priceDOP: 1180000,
+                priceUSD: 19800,
+                currency: "DOP",
+                province: "Santiago",
+                transmission: "Automática",
+                fuel: "Gasolina",
+                condition: "Usado Local",
+                mileage: "58,000 mi",
+                engine: "2.0L 4 Cyl",
+                color: "Gris Grafito",
+                sellerName: "Carlos Rosario",
+                sellerPhone: "8295550144",
+                whatsapp: "18295550144",
+                status: "Disponible",
+                featured: false,
+                images: [
+                    "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=80"
+                ],
+                description: "Único dueño en el país. Mantenimiento en concesionario. Luces LED, encendido por botón y sensores de parqueo."
+            },
+            {
+                id: 3,
+                title: "Hyundai Sonata LF",
+                brand: "Hyundai",
+                model: "Sonata",
+                year: 2018,
+                priceDOP: 780000,
+                priceUSD: 13100,
+                currency: "DOP",
+                province: "La Vega",
+                transmission: "Automática",
+                fuel: "GLP",
+                condition: "Recién Importado",
+                mileage: "75,000 km",
+                engine: "2.0L LPI",
+                color: "Negro",
+                sellerName: "Vega Auto Gallery",
+                sellerPhone: "8495550177",
+                whatsapp: "18495550177",
+                status: "Disponible",
+                featured: true,
+                images: [
+                    "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80"
+                ],
+                description: "GLP de fábrica supereconómico. Pantalla Android Touch, aire digital enfriando al 100%."
+            },
+            {
+                id: 4,
+                title: "Ford Explorer XLT 4WD",
+                brand: "Ford",
+                model: "Explorer",
+                year: 2021,
+                priceDOP: 2280000,
+                priceUSD: 38500,
+                currency: "USD",
+                province: "La Altagracia",
+                transmission: "Automática",
+                fuel: "Gasolina",
+                condition: "Limpio / Certificado",
+                mileage: "31,000 mi",
+                engine: "2.3L EcoBoost",
+                color: "Azul Marino",
+                sellerName: "Punta Cana Auto Sales",
+                sellerPhone: "8095550888",
+                whatsapp: "18095550888",
+                status: "Disponible",
+                featured: true,
+                images: [
+                    "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80"
+                ],
+                description: "SUV de 3 filas. Tracción 4WD con selector de terreno. Baúl eléctrico y asientos en piel."
+            },
+            {
+                id: 5,
+                title: "Toyota Hilux SRX 4x4",
+                brand: "Toyota",
+                model: "Hilux",
+                year: 2022,
+                priceDOP: 2950000,
+                priceUSD: 49800,
+                currency: "USD",
+                province: "Duarte",
+                transmission: "Automática",
+                fuel: "Diésel",
+                condition: "Usado Local",
+                mileage: "28,000 km",
+                engine: "2.8L Turbo Diésel",
+                color: "Blanco",
+                sellerName: "San Francisco Motors",
+                sellerPhone: "8095559911",
+                whatsapp: "18095559911",
+                status: "Disponible",
+                featured: true,
+                images: [
+                    "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&q=80"
+                ],
+                description: "Camioneta diésel súper fuerte y cuidada. Mantenimiento al día, tracción 4x4 activa."
+            },
+            {
+                id: 6,
+                title: "Kia Picanto LX",
+                brand: "Kia",
+                model: "Picanto",
+                year: 2019,
+                priceDOP: 590000,
+                priceUSD: 9900,
+                currency: "DOP",
+                province: "San Cristóbal",
+                transmission: "Automática",
+                fuel: "Gasolina",
+                condition: "Usado Local",
+                mileage: "62,000 km",
+                engine: "1.2L 4 Cyl",
+                color: "Rojo Pasión",
+                sellerName: "Lic. Manuel Báez",
+                sellerPhone: "8295550321",
+                whatsapp: "18295550321",
+                status: "Disponible",
+                featured: false,
+                images: [
+                    "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=80"
+                ],
+                description: "Súper económico de combustible. Auto perfecto para la ciudad. Gomas a un 85%."
+            }
+        ];
+
+        function App() {
+            const [vehicles, setVehicles] = useState(INITIAL_VEHICLES);
+            const [filteredVehicles, setFilteredVehicles] = useState(INITIAL_VEHICLES);
+            const [activeTab, setActiveTab] = useState('catalog'); 
+            const [selectedVehicle, setSelectedVehicle] = useState(null);
+            const [displayCurrency, setDisplayCurrency] = useState('ALL'); 
+            
+            // Search Filters State
+            const [searchKeyword, setSearchKeyword] = useState('');
+            const [selectedProvince, setSelectedProvince] = useState('');
+            const [selectedBrand, setSelectedBrand] = useState('');
+            const [selectedModel, setSelectedModel] = useState('');
+            const [selectedCondition, setSelectedCondition] = useState('');
+            const [selectedFuel, setSelectedFuel] = useState('');
+            const [maxPrice, setMaxPrice] = useState('');
+
+            // User my vehicles list
+            const [userMyVehicles, setUserMyVehicles] = useState([INITIAL_VEHICLES[0], INITIAL_VEHICLES[1]]);
+
+            // Publish form state
+            const [formData, setFormData] = useState({
+                title: '',
+                brand: 'Toyota',
+                customBrand: '',
+                model: 'Camry',
+                customModel: '',
+                year: 2020,
+                price: '',
+                currency: 'DOP',
+                province: 'Distrito Nacional',
+                transmission: 'Automática',
+                fuel: 'Gasolina',
+                condition: 'Recién Importado',
+                mileage: '',
+                engine: '',
+                color: '',
+                sellerName: '',
+                whatsapp: '',
+                description: '',
+                imageUrl: ''
+            });
+
+            // Uploaded images state
+            const [uploadedImages, setUploadedImages] = useState([]);
+            const [selectedImageTab, setSelectedImageTab] = useState('upload');
+
+            const handleImageUpload = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setUploadedImages(prev => [...prev, reader.result]);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const removeUploadedImage = (indexToRemove) => {
+                setUploadedImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
+            };
+
+            const handleFilterBrandChange = (brand) => {
+                setSelectedBrand(brand);
+                setSelectedModel('');
+            };
+
+            const handleFormBrandChange = (brand) => {
+                if (brand === 'OTRA') {
+                    setFormData({
+                        ...formData,
+                        brand: 'OTRA',
+                        customBrand: '',
+                        model: 'OTRO',
+                        customModel: ''
+                    });
+                } else {
+                    const availableModels = BRANDS_AND_MODELS[brand] || [];
+                    setFormData({
+                        ...formData,
+                        brand: brand,
+                        customBrand: '',
+                        model: availableModels.length > 0 ? availableModels[0] : '',
+                        customModel: ''
+                    });
+                }
+            };
+
+            useEffect(() => {
+                let result = vehicles;
+
+                if (searchKeyword.trim() !== '') {
+                    const kw = searchKeyword.toLowerCase();
+                    result = result.filter(v => 
+                        v.title.toLowerCase().includes(kw) || 
+                        v.brand.toLowerCase().includes(kw) || 
+                        v.model.toLowerCase().includes(kw)
+                    );
+                }
+
+                if (selectedProvince !== '') {
+                    result = result.filter(v => v.province === selectedProvince);
+                }
+
+                if (selectedBrand !== '') {
+                    result = result.filter(v => v.brand === selectedBrand);
+                }
+
+                if (selectedModel !== '') {
+                    result = result.filter(v => v.model === selectedModel);
+                }
+
+                if (selectedCondition !== '') {
+                    result = result.filter(v => v.condition === selectedCondition);
+                }
+
+                if (selectedFuel !== '') {
+                    result = result.filter(v => v.fuel === selectedFuel);
+                }
+
+                if (maxPrice !== '' && !isNaN(maxPrice)) {
+                    result = result.filter(v => v.priceUSD <= parseFloat(maxPrice) || v.priceDOP <= parseFloat(maxPrice) * 59);
+                }
+
+                setFilteredVehicles(result);
+            }, [searchKeyword, selectedProvince, selectedBrand, selectedModel, selectedCondition, selectedFuel, maxPrice, vehicles]);
+
+            // Formatters & Helpers
+            const formatDOP = (amount) => {
+                return new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(amount);
+            };
+
+            const formatUSD = (amount) => {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+            };
+
+            const getWhatsAppLink = (vehicle) => {
+                const cleanPhone = vehicle.whatsapp.replace(/[^0-9]/g, '');
+                const text = encodeURIComponent(`Hola ${vehicle.sellerName}, vi tu anuncio del ${vehicle.title} (${vehicle.year}) en vendetucarro.com.do y me gustaría obtener más información.`);
+                return `https://wa.me/${cleanPhone}?text=${text}`;
+            };
+
+            const handlePublishSubmit = (e) => {
+                e.preventDefault();
+                const priceNum = parseFloat(formData.price) || 0;
+                let dop = priceNum;
+                let usd = Math.round(priceNum / 59);
+
+                if (formData.currency === 'USD') {
+                    usd = priceNum;
+                    dop = Math.round(priceNum * 59);
+                }
+
+                const finalBrand = formData.brand === 'OTRA' ? (formData.customBrand.trim() || 'Otra Marca') : formData.brand;
+                const finalModel = (formData.brand === 'OTRA' || formData.model === 'OTRO') ? (formData.customModel.trim() || 'Otro Modelo') : formData.model;
+
+                let vehicleImages = [];
+                if (uploadedImages.length > 0) {
+                    vehicleImages = uploadedImages;
+                } else if (formData.imageUrl.trim() !== '') {
+                    vehicleImages = [formData.imageUrl.trim()];
+                } else {
+                    vehicleImages = ["https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80"];
+                }
+
+                const newVehicle = {
+                    id: Date.now(),
+                    title: `${finalBrand} ${finalModel}`,
+                    brand: finalBrand,
+                    model: finalModel,
+                    year: parseInt(formData.year),
+                    priceDOP: dop,
+                    priceUSD: usd,
+                    currency: formData.currency,
+                    province: formData.province,
+                    transmission: formData.transmission,
+                    fuel: formData.fuel,
+                    condition: formData.condition,
+                    mileage: formData.mileage || "0 mi",
+                    engine: formData.engine || "Standard",
+                    color: formData.color || "Blanco",
+                    sellerName: formData.sellerName || "Vendedor Privado",
+                    sellerPhone: formData.whatsapp,
+                    whatsapp: formData.whatsapp,
+                    status: "Disponible",
+                    featured: false,
+                    images: vehicleImages,
+                    description: formData.description || "Vehículo disponible en excelentes condiciones."
+                };
+
+                const updated = [newVehicle, ...vehicles];
+                setVehicles(updated);
+                setUserMyVehicles([newVehicle, ...userMyVehicles]);
+                setActiveTab('catalog');
+                
+                setFormData({
+                    title: '',
+                    brand: 'Toyota',
+                    customBrand: '',
+                    model: 'Camry',
+                    customModel: '',
+                    year: 2020,
+                    price: '',
+                    currency: 'DOP',
+                    province: 'Distrito Nacional',
+                    transmission: 'Automática',
+                    fuel: 'Gasolina',
+                    condition: 'Recién Importado',
+                    mileage: '',
+                    engine: '',
+                    color: '',
+                    sellerName: '',
+                    whatsapp: '',
+                    description: '',
+                    imageUrl: ''
+                });
+                setUploadedImages([]);
+            };
+
+            const handleMarkAsSold = (id) => {
+                setVehicles(vehicles.map(v => v.id === id ? { ...v, status: 'Vendido' } : v));
+                setUserMyVehicles(userMyVehicles.map(v => v.id === id ? { ...v, status: 'Vendido' } : v));
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col justify-between">
+                    
+                    <header className="bg-drblue-500 text-white shadow-md sticky top-0 z-40 border-b-4 border-drred-500">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between h-16">
+                                
+                                <div 
+                                    onClick={() => setActiveTab('catalog')}
+                                    className="flex items-center space-x-2 cursor-pointer select-none"
+                                >
+                                    <div className="bg-drred-500 text-white p-2 rounded-xl flex items-center justify-center shadow-md">
+                                        <i className="fa-solid fa-car-side text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <span className="text-xl font-extrabold tracking-tight">vendetucarro<span className="text-drred-500">.com.do</span></span>
+                                        <span className="hidden md:inline-block text-[10px] bg-white text-drblue-500 font-bold px-2 py-0.5 rounded-full ml-2 uppercase tracking-wider">RD 🇩🇴</span>
+                                    </div>
+                                </div>
+
+                                <nav className="hidden md:flex items-center space-x-4">
+                                    <button 
+                                        onClick={() => setActiveTab('catalog')} 
+                                        className={`px-3 py-2 rounded-md font-medium text-sm transition ${activeTab === 'catalog' ? 'bg-drred-500 text-white shadow' : 'text-slate-200 hover:text-white hover:bg-drblue-600'}`}
+                                    >
+                                        <i className="fa-solid fa-magnifying-glass mr-2"></i>Catálogo
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveTab('dashboard')} 
+                                        className={`px-3 py-2 rounded-md font-medium text-sm transition ${activeTab === 'dashboard' ? 'bg-drred-500 text-white shadow' : 'text-slate-200 hover:text-white hover:bg-drblue-600'}`}
+                                    >
+                                        <i className="fa-solid fa-gauge-high mr-2"></i>Mi Panel
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveTab('publish')} 
+                                        className="bg-drred-500 hover:bg-drred-600 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow flex items-center space-x-2 transition transform hover:-translate-y-0.5 border border-white/20"
+                                    >
+                                        <i className="fa-solid fa-plus-circle"></i>
+                                        <span>Vender mi Carro</span>
+                                    </button>
+                                </nav>
+                            </div>
+                        </div>
+
+                        <div className="md:hidden flex border-t border-drblue-600 bg-drblue-600 text-xs">
+                            <button 
+                                onClick={() => setActiveTab('catalog')}
+                                className={`flex-1 py-3 text-center ${activeTab === 'catalog' ? 'text-white bg-drred-500 font-bold' : 'text-slate-200'}`}
+                            >
+                                <i className="fa-solid fa-car text-base block mb-1"></i>Catálogo
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('publish')}
+                                className={`flex-1 py-3 text-center ${activeTab === 'publish' ? 'text-white bg-drred-500 font-bold' : 'text-slate-200'}`}
+                            >
+                                <i className="fa-solid fa-circle-plus text-base block mb-1"></i>Publicar
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('dashboard')}
+                                className={`flex-1 py-3 text-center ${activeTab === 'dashboard' ? 'text-white bg-drred-500 font-bold' : 'text-slate-200'}`}
+                            >
+                                <i className="fa-solid fa-user text-base block mb-1"></i>Mis Autos
+                            </button>
+                        </div>
+                    </header>
+
+                    {}
+                    {activeTab === 'catalog' && (
+                        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow">
+                            
+                            <div className="relative rounded-2xl bg-gradient-to-r from-drblue-500 via-drblue-600 to-drred-500 text-white overflow-hidden shadow-xl mb-8 border-b-4 border-drred-500">
+                                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                                <div className="relative z-10 px-6 py-10 md:py-14 max-w-2xl">
+                                    <div className="inline-flex items-center gap-2 bg-white/20 border border-white/30 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3 backdrop-blur">
+                                        <i className="fa-solid fa-flag text-drred-500"></i> Plataforma 100% Dominicana 🇩🇴
+                                    </div>
+                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight mb-3">
+                                        Encuentra o vende tu vehículo rápido en RD
+                                    </h1>
+                                    <p className="text-slate-100 text-sm md:text-base mb-6">
+                                        Conecta directamente vía WhatsApp con vendedores verificados en Santo Domingo, Santiago y todo el país.
+                                    </p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <button onClick={() => setActiveTab('publish')} className="bg-drred-500 hover:bg-drred-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-md transition flex items-center gap-2">
+                                            <i className="fa-solid fa-car-on"></i> Publicar Gratis
+                                        </button>
+                                        <a href="#filtros" className="bg-white text-drblue-500 hover:bg-slate-100 px-4 py-2.5 rounded-lg font-bold text-sm transition">
+                                            Ver ofertas del día
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {}
+                            <div id="filtros" className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-8 border-t-4 border-drblue-500 border-x border-b border-slate-100">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                    <div className="md:col-span-1 relative">
+                                        <label className="text-[11px] font-bold text-drblue-500 uppercase block mb-1">Palabra clave</label>
+                                        <div className="relative">
+                                            <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Ej. LE, XLE, Clean Carfax..." 
+                                                value={searchKeyword}
+                                                onChange={(e) => setSearchKeyword(e.target.value)}
+                                                className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-drblue-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[11px] font-bold text-drblue-500 uppercase block mb-1">Provincia</label>
+                                        <select 
+                                            value={selectedProvince}
+                                            onChange={(e) => setSelectedProvince(e.target.value)}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-drblue-500 bg-white font-medium text-slate-700"
+                                        >
+                                            <option value="">Todas las provincias (32)</option>
+                                            {ALL_DOMINICAN_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[11px] font-bold text-drblue-500 uppercase block mb-1">Marca</label>
+                                        <select 
+                                            value={selectedBrand}
+                                            onChange={(e) => handleFilterBrandChange(e.target.value)}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-drblue-500 bg-white font-semibold text-drblue-500"
+                                        >
+                                            <option value="">Todas las Marcas ({BRAND_LIST.length})</option>
+                                            {BRAND_LIST.map(b => <option key={b} value={b}>{b}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[11px] font-bold text-drblue-500 uppercase block mb-1">Modelo</label>
+                                        <select 
+                                            value={selectedModel}
+                                            onChange={(e) => setSelectedModel(e.target.value)}
+                                            disabled={!selectedBrand}
+                                            className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-drblue-500 bg-white ${!selectedBrand ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}`}
+                                        >
+                                            <option value="">{selectedBrand ? `Todos los modelos de ${selectedBrand}` : 'Selecciona una marca primero'}</option>
+                                            {selectedBrand && BRANDS_AND_MODELS[selectedBrand]?.map(m => (
+                                                <option key={m} value={m}>{m}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase">Condición</label>
+                                        <select 
+                                            value={selectedCondition} 
+                                            onChange={(e) => setSelectedCondition(e.target.value)}
+                                            className="w-full mt-1 p-2 border border-slate-200 rounded-md text-xs bg-slate-50"
+                                        >
+                                            <option value="">Cualquier condición</option>
+                                            <option value="Recién Importado">Recién Importado</option>
+                                            <option value="Usado Local">Usado Local</option>
+                                            <option value="Limpio / Certificado">Limpio / Certificado</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase">Combustible</label>
+                                        <select 
+                                            value={selectedFuel} 
+                                            onChange={(e) => setSelectedFuel(e.target.value)}
+                                            className="w-full mt-1 p-2 border border-slate-200 rounded-md text-xs bg-slate-50"
+                                        >
+                                            <option value="">Todo tipo</option>
+                                            <option value="Gasolina">Gasolina</option>
+                                            <option value="GLP">GLP</option>
+                                            <option value="Diésel">Diésel</option>
+                                            <option value="Híbrido">Híbrido</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase">Precio Máximo (USD)</label>
+                                        <input 
+                                            type="number" 
+                                            placeholder="Ej. 25000" 
+                                            value={maxPrice}
+                                            onChange={(e) => setMaxPrice(e.target.value)}
+                                            className="w-full mt-1 p-2 border border-slate-200 rounded-md text-xs bg-slate-50"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-end">
+                                        <button 
+                                            onClick={() => {
+                                                setSearchKeyword('');
+                                                setSelectedProvince('');
+                                                setSelectedBrand('');
+                                                setSelectedModel('');
+                                                setSelectedCondition('');
+                                                setSelectedFuel('');
+                                                setMaxPrice('');
+                                            }}
+                                            className="w-full py-2 bg-slate-100 hover:bg-drred-50 text-slate-600 hover:text-drred-500 rounded-md text-xs font-semibold transition"
+                                        >
+                                            Limpiar Filtros
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                <div>
+                                    <h2 className="text-xl font-bold text-drblue-500">
+                                        Vehículos Disponibles ({filteredVehicles.length})
+                                    </h2>
+                                    <p className="text-xs text-slate-500">Mostrando ofertas actualizadas hoy en República Dominicana 🇩🇴</p>
+                                </div>
+
+                                <div className="flex items-center space-x-1 bg-slate-200 p-1 rounded-lg self-start sm:self-auto">
+                                    <span className="text-xs font-semibold text-slate-600 px-2">Ver precios en:</span>
+                                    <button 
+                                        onClick={() => setDisplayCurrency('ALL')} 
+                                        className={`px-2.5 py-1 text-xs rounded-md font-bold transition ${displayCurrency === 'ALL' ? 'bg-white text-drblue-500 shadow-sm' : 'text-slate-600'}`}
+                                    >
+                                        Ambos
+                                    </button>
+                                    <button 
+                                        onClick={() => setDisplayCurrency('DOP')} 
+                                        className={`px-2.5 py-1 text-xs rounded-md font-bold transition ${displayCurrency === 'DOP' ? 'bg-drblue-500 text-white shadow-sm' : 'text-slate-600'}`}
+                                    >
+                                        DOP (RD$)
+                                    </button>
+                                    <button 
+                                        onClick={() => setDisplayCurrency('USD')} 
+                                        className={`px-2.5 py-1 text-xs rounded-md font-bold transition ${displayCurrency === 'USD' ? 'bg-drred-500 text-white shadow-sm' : 'text-slate-600'}`}
+                                    >
+                                        USD ($)
+                                    </button>
+                                </div>
+                            </div>
+
+                            {filteredVehicles.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {filteredVehicles.map((item) => (
+                                        <div key={item.id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-slate-200 overflow-hidden flex flex-col group border-t-2 border-t-drblue-500">
+                                            
+                                            <div className="relative h-48 sm:h-52 overflow-hidden bg-slate-100">
+                                                <img 
+                                                    src={item.images[0]} 
+                                                    alt={item.title} 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                                    onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80"; }}
+                                                />
+                                                <div className="absolute top-3 left-3 flex flex-col gap-1">
+                                                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wide text-white shadow ${item.condition === 'Recién Importado' ? 'bg-drred-500' : 'bg-drblue-500'}`}>
+                                                        {item.condition}
+                                                    </span>
+                                                    {item.status === 'Vendido' && (
+                                                        <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide bg-slate-800 text-white shadow">
+                                                            VENDIDO
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="absolute bottom-3 right-3 bg-drblue-500/80 backdrop-blur text-white text-[11px] px-2 py-0.5 rounded font-medium">
+                                                    <i className="fa-solid fa-camera mr-1"></i>{item.images.length}
+                                                </div>
+                                            </div>
+
+                                            <div className="p-4 flex-grow flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                                        <span className="font-semibold text-drblue-500"><i className="fa-solid fa-location-dot mr-1 text-drred-500"></i>{item.province}</span>
+                                                        <span>{item.year}</span>
+                                                    </div>
+
+                                                    <h3 className="font-bold text-slate-900 text-base mb-2 line-clamp-1 group-hover:text-drblue-500 transition">
+                                                        {item.title}
+                                                    </h3>
+
+                                                    <div className="flex flex-wrap gap-1.5 mb-4 text-[11px] text-slate-600">
+                                                        <span className="bg-slate-100 px-2 py-0.5 rounded"><i className="fa-solid fa-gauge mr-1"></i>{item.mileage}</span>
+                                                        <span className="bg-slate-100 px-2 py-0.5 rounded"><i className="fa-solid fa-gears mr-1"></i>{item.transmission}</span>
+                                                        <span className="bg-slate-100 px-2 py-0.5 rounded"><i className="fa-solid fa-gas-pump mr-1"></i>{item.fuel}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-3 border-t border-slate-100">
+                                                    <div className="mb-3">
+                                                        {(displayCurrency === 'ALL' || displayCurrency === 'DOP') && (
+                                                            <div className="text-lg font-black text-drblue-500">
+                                                                {formatDOP(item.priceDOP)}
+                                                            </div>
+                                                        )}
+                                                        {(displayCurrency === 'ALL' || displayCurrency === 'USD') && (
+                                                            <div className={`font-bold ${displayCurrency === 'USD' ? 'text-lg text-drblue-500' : 'text-xs text-drred-500 font-semibold'}`}>
+                                                                {formatUSD(item.priceUSD)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <button 
+                                                            onClick={() => setSelectedVehicle(item)} 
+                                                            className="w-full py-2 bg-drblue-50 hover:bg-drblue-100 text-drblue-500 text-xs font-bold rounded-lg transition"
+                                                        >
+                                                            Ver Detalle
+                                                        </button>
+                                                        
+                                                        <a 
+                                                            href={getWhatsAppLink(item)} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="w-full py-2 bg-whatsapp-500 hover:bg-whatsapp-600 text-white text-xs font-bold rounded-lg transition flex items-center justify-center space-x-1 shadow-sm"
+                                                        >
+                                                            <i className="fa-brands fa-whatsapp text-sm"></i>
+                                                            <span>WhatsApp</span>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+                                    <i className="fa-solid fa-car-side text-4xl text-slate-300 mb-3"></i>
+                                    <h3 className="text-lg font-bold text-slate-700">No se encontraron vehículos</h3>
+                                    <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">Intenta cambiando o limpiando tus criterios de búsqueda por marca o modelo.</p>
+                                </div>
+                            )}
+
+                        </main>
+                    )}
+
+                    {}
+                    {activeTab === 'publish' && (
+                        <main className="max-w-3xl mx-auto px-4 py-8 w-full flex-grow">
+                            <div className="bg-white rounded-2xl shadow-xl border-t-8 border-drred-500 border-x border-b border-slate-100 p-6 md:p-8">
+                                <div className="border-b border-slate-100 pb-4 mb-6">
+                                    <span className="text-xs font-bold text-drred-500 uppercase tracking-wider">Publica gratis en República Dominicana 🇩🇴</span>
+                                    <h2 className="text-2xl font-black text-drblue-500">Vender mi Vehículo</h2>
+                                    <p className="text-xs text-slate-500 mt-1">Completa los datos de tu auto. Los compradores te contactarán directo a tu WhatsApp.</p>
+                                </div>
+
+                                <form onSubmit={handlePublishSubmit} className="space-y-6">
+                                    
+                                    <div className="space-y-4">
+                                        <h3 className="text-sm font-bold text-drblue-500 border-b pb-1">1. Datos Básicos del Vehículo</h3>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Marca *</label>
+                                                <select 
+                                                    value={formData.brand} 
+                                                    onChange={e => handleFormBrandChange(e.target.value)}
+                                                    className="w-full p-2.5 border rounded-lg text-sm bg-white font-semibold text-drblue-500" required
+                                                >
+                                                    {BRAND_LIST.map(b => <option key={b} value={b}>{b}</option>)}
+                                                    <option value="OTRA">➕ Otra marca (Escribir manualmente)</option>
+                                                </select>
+
+                                                {formData.brand === 'OTRA' && (
+                                                    <input 
+                                                        type="text"
+                                                        placeholder="Escribe la marca (ej. BYD, Chery, Pontiac...)"
+                                                        value={formData.customBrand}
+                                                        onChange={e => setFormData({...formData, customBrand: e.target.value})}
+                                                        className="w-full mt-2 p-2.5 border border-drblue-500 rounded-lg text-sm bg-drblue-50/50"
+                                                        required
+                                                    />
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Modelo *</label>
+                                                {formData.brand === 'OTRA' ? (
+                                                    <input 
+                                                        type="text"
+                                                        placeholder="Escribe el modelo"
+                                                        value={formData.customModel}
+                                                        onChange={e => setFormData({...formData, customModel: e.target.value})}
+                                                        className="w-full p-2.5 border border-drblue-500 rounded-lg text-sm bg-drblue-50/50"
+                                                        required
+                                                    />
+                                                ) : (
+                                                    <div>
+                                                        <select 
+                                                            value={formData.model}
+                                                            onChange={e => setFormData({...formData, model: e.target.value})}
+                                                            className="w-full p-2.5 border rounded-lg text-sm bg-white" required
+                                                        >
+                                                            {BRANDS_AND_MODELS[formData.brand]?.map(m => (
+                                                                <option key={m} value={m}>{m}</option>
+                                                            ))}
+                                                            <option value="OTRO">➕ Otro modelo de {formData.brand}</option>
+                                                        </select>
+
+                                                        {formData.model === 'OTRO' && (
+                                                            <input 
+                                                                type="text"
+                                                                placeholder="Escribe el modelo específico"
+                                                                value={formData.customModel}
+                                                                onChange={e => setFormData({...formData, customModel: e.target.value})}
+                                                                className="w-full mt-2 p-2.5 border border-drblue-500 rounded-lg text-sm bg-drblue-50/50"
+                                                                required
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Año *</label>
+                                                <input 
+                                                    type="number" 
+                                                    min="1990" 
+                                                    max="2027"
+                                                    value={formData.year}
+                                                    onChange={e => setFormData({...formData, year: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm" required 
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Transmisión *</label>
+                                                <select 
+                                                    value={formData.transmission} 
+                                                    onChange={e => setFormData({...formData, transmission: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm bg-white"
+                                                >
+                                                    <option value="Automática">Automática</option>
+                                                    <option value="Manual">Manual / Mecánica</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Combustible *</label>
+                                                <select 
+                                                    value={formData.fuel} 
+                                                    onChange={e => setFormData({...formData, fuel: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm bg-white"
+                                                >
+                                                    <option value="Gasolina">Gasolina</option>
+                                                    <option value="GLP">GLP</option>
+                                                    <option value="Diésel">Diésel</option>
+                                                    <option value="Híbrido">Híbrido</option>
+                                                    <option value="Eléctrico">Eléctrico</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 pt-2">
+                                        <h3 className="text-sm font-bold text-drblue-500 border-b pb-1">2. Ubicación y Precio</h3>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Provincia *</label>
+                                                <select 
+                                                    value={formData.province} 
+                                                    onChange={e => setFormData({...formData, province: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm bg-white" required
+                                                >
+                                                    {ALL_DOMINICAN_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Moneda *</label>
+                                                <select 
+                                                    value={formData.currency} 
+                                                    onChange={e => setFormData({...formData, currency: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm bg-white font-bold text-drblue-500"
+                                                >
+                                                    <option value="DOP">Pesos Dominicanos (DOP RD$)</option>
+                                                    <option value="USD">Dólares (USD US$)</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Precio de Venta *</label>
+                                                <input 
+                                                    type="number" 
+                                                    placeholder="Ej. 750000" 
+                                                    value={formData.price}
+                                                    onChange={e => setFormData({...formData, price: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm font-bold" required 
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 pt-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                        <h3 className="text-sm font-bold text-drblue-500 flex items-center gap-2">
+                                            <i className="fa-brands fa-whatsapp text-lg text-whatsapp-500"></i>
+                                            <span>3. Contacto directo por WhatsApp (RD)</span>
+                                        </h3>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Tu Nombre o Dealer *</label>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Ej. Pedro Rosario / Auto Dealership" 
+                                                    value={formData.sellerName}
+                                                    onChange={e => setFormData({...formData, sellerName: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm bg-white" required 
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">Teléfono con WhatsApp *</label>
+                                                <input 
+                                                    type="tel" 
+                                                    placeholder="Ej. 8095550199 o 829..." 
+                                                    value={formData.whatsapp}
+                                                    onChange={e => setFormData({...formData, whatsapp: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm bg-white font-mono" required 
+                                                />
+                                                <span className="text-[10px] text-slate-500 mt-1 block">Los compradores en RD te escribirán directamente a este número.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 pt-2">
+                                        <h3 className="text-sm font-bold text-drblue-500 border-b pb-1 flex items-center justify-between">
+                                            <span>4. Fotos del Vehículo *</span>
+                                            <div className="flex text-xs space-x-2">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setSelectedImageTab('upload')}
+                                                    className={`px-2.5 py-1 rounded-md font-semibold transition ${selectedImageTab === 'upload' ? 'bg-drblue-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+                                                >
+                                                    <i className="fa-solid fa-upload mr-1"></i>Subir fotos
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setSelectedImageTab('url')}
+                                                    className={`px-2.5 py-1 rounded-md font-semibold transition ${selectedImageTab === 'url' ? 'bg-drblue-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+                                                >
+                                                    <i className="fa-solid fa-link mr-1"></i>Usar URL
+                                                </button>
+                                            </div>
+                                        </h3>
+
+                                        {selectedImageTab === 'upload' ? (
+                                            <div>
+                                                <label className="border-2 border-dashed border-slate-300 hover:border-drblue-500 bg-slate-50 hover:bg-drblue-50/30 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                                                    <div className="w-12 h-12 rounded-full bg-drblue-100 group-hover:bg-drblue-200 text-drblue-500 flex items-center justify-center mb-2 transition">
+                                                        <i className="fa-solid fa-cloud-arrow-up text-xl"></i>
+                                                    </div>
+                                                    <span className="text-sm font-bold text-slate-800 group-hover:text-drblue-500">Haz clic aquí para seleccionar fotos</span>
+                                                    <span className="text-xs text-slate-500 mt-1">Puedes seleccionar varias fotos directamente desde tu galería o cámara</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        multiple 
+                                                        onChange={handleImageUpload} 
+                                                        className="hidden" 
+                                                    />
+                                                </label>
+
+                                                {uploadedImages.length > 0 && (
+                                                    <div className="mt-4">
+                                                        <span className="text-xs font-bold text-slate-700 block mb-2">Imágenes seleccionadas ({uploadedImages.length}):</span>
+                                                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                                                            {uploadedImages.map((img, idx) => (
+                                                                <div key={idx} className="relative group rounded-lg overflow-hidden h-20 bg-slate-100 border border-slate-200">
+                                                                    <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => removeUploadedImage(idx)}
+                                                                        className="absolute top-1 right-1 bg-drred-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow opacity-90 hover:opacity-100 transition"
+                                                                    >
+                                                                        <i className="fa-solid fa-xmark"></i>
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-700 mb-1">URL Foto Principal</label>
+                                                <input 
+                                                    type="url" 
+                                                    placeholder="https://images.unsplash.com/photo-..." 
+                                                    value={formData.imageUrl}
+                                                    onChange={e => setFormData({...formData, imageUrl: e.target.value})}
+                                                    className="w-full p-2.5 border rounded-lg text-sm"
+                                                />
+                                                <span className="text-[10px] text-slate-400 mt-1 block">Si lo dejas en blanco se asignará una imagen de muestra automáticamente.</span>
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-700 mb-1">Descripción del Vehículo</label>
+                                            <textarea 
+                                                rows="3" 
+                                                placeholder="Menciona detalles importantes: matrícula al día, mantenimiento, estado de llantas, extras..." 
+                                                value={formData.description}
+                                                onChange={e => setFormData({...formData, description: e.target.value})}
+                                                className="w-full p-2.5 border rounded-lg text-sm"
+                                            ></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4">
+                                        <button 
+                                            type="submit" 
+                                            className="w-full py-3.5 bg-drred-500 hover:bg-drred-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-base"
+                                        >
+                                            <i className="fa-solid fa-paper-plane"></i>
+                                            <span>Publicar Vehículo Ahora</span>
+                                        </button>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </main>
+                    )}
+
+                    {}
+                    {activeTab === 'dashboard' && (
+                        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h1 className="text-2xl font-black text-drblue-500">Panel de Control del Vendedor</h1>
+                                    <p className="text-xs text-slate-500">Gestiona tus anuncios activos en vendetucarro.com.do 🇩🇴</p>
+                                </div>
+                                <button 
+                                    onClick={() => setActiveTab('publish')}
+                                    className="bg-drred-500 hover:bg-drred-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow"
+                                >
+                                    + Publicar Otro Carro
+                                </button>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow border border-slate-200 border-t-4 border-t-drblue-500 overflow-hidden">
+                                <div className="p-4 bg-drblue-50 border-b border-slate-100 flex items-center justify-between">
+                                    <span className="font-bold text-sm text-drblue-500">Mis Anuncios ({userMyVehicles.length})</span>
+                                    <span className="text-xs text-slate-500">Estado en Plataforma</span>
+                                </div>
+
+                                <div className="divide-y divide-slate-100">
+                                    {userMyVehicles.map(item => (
+                                        <div key={item.id} className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                            <div className="flex items-center space-x-4">
+                                                <img 
+                                                    src={item.images[0]} 
+                                                    alt={item.title} 
+                                                    className="w-20 h-14 object-cover rounded-lg bg-slate-100"
+                                                />
+                                                <div>
+                                                    <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
+                                                    <p className="text-xs text-slate-500">{item.province} • {formatDOP(item.priceDOP)}</p>
+                                                    <div className="mt-1">
+                                                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${item.status === 'Vendido' ? 'bg-slate-200 text-slate-700' : 'bg-drblue-50 text-drblue-500 border border-drblue-100'}`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2 w-full md:w-auto">
+                                                {item.status !== 'Vendido' && (
+                                                    <button 
+                                                        onClick={() => handleMarkAsSold(item.id)}
+                                                        className="px-3 py-1.5 bg-drred-50 text-drred-500 hover:bg-drred-100 text-xs font-bold rounded-md transition"
+                                                    >
+                                                        <i className="fa-solid fa-check-double mr-1"></i>Marcar Vendido
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    onClick={() => setSelectedVehicle(item)}
+                                                    className="px-3 py-1.5 bg-drblue-50 hover:bg-drblue-100 text-drblue-500 text-xs font-bold rounded-md transition"
+                                                >
+                                                    Ver Anuncio
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </main>
+                    )}
+
+                    {}
+                    {selectedVehicle && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-drblue-900/70 backdrop-blur-sm p-4 overflow-y-auto">
+                            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden my-8 relative animate-in fade-in zoom-in duration-200 border-t-8 border-drblue-500">
+                                
+                                <button 
+                                    onClick={() => setSelectedVehicle(null)}
+                                    className="absolute top-4 right-4 z-10 bg-slate-900/60 hover:bg-drred-500 text-white rounded-full w-8 h-8 flex items-center justify-center transition"
+                                >
+                                    <i className="fa-solid fa-xmark"></i>
+                                </button>
+
+                                <div className="relative h-64 sm:h-80 bg-slate-900">
+                                    <img 
+                                        src={selectedVehicle.images[0]} 
+                                        alt={selectedVehicle.title} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute bottom-4 left-4 bg-drblue-500/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-semibold">
+                                        <i className="fa-solid fa-location-dot mr-1 text-drred-500"></i>{selectedVehicle.province}, Rep. Dom.
+                                    </div>
+                                </div>
+
+                                <div className="p-6">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4 border-b pb-4">
+                                        <div>
+                                            <span className="text-xs font-extrabold uppercase tracking-wide text-drred-500">{selectedVehicle.condition}</span>
+                                            <h2 className="text-2xl font-black text-drblue-500">{selectedVehicle.title}</h2>
+                                        </div>
+                                        <div className="text-left md:text-right">
+                                            <div className="text-2xl font-black text-drblue-500">{formatDOP(selectedVehicle.priceDOP)}</div>
+                                            <div className="text-sm font-bold text-drred-500">{formatUSD(selectedVehicle.priceUSD)}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-drblue-50/50 p-4 rounded-xl mb-6 border border-drblue-100">
+                                        <div>
+                                            <span className="block text-[10px] uppercase font-bold text-drblue-500">Año</span>
+                                            <span className="font-bold text-slate-800 text-sm">{selectedVehicle.year}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-[10px] uppercase font-bold text-drblue-500">Kilometraje/Millas</span>
+                                            <span className="font-bold text-slate-800 text-sm">{selectedVehicle.mileage}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-[10px] uppercase font-bold text-drblue-500">Transmisión</span>
+                                            <span className="font-bold text-slate-800 text-sm">{selectedVehicle.transmission}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-[10px] uppercase font-bold text-drblue-500">Combustible</span>
+                                            <span className="font-bold text-slate-800 text-sm">{selectedVehicle.fuel}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <h4 className="font-bold text-slate-900 text-sm mb-2">Descripción del vendedor:</h4>
+                                        <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                            {selectedVehicle.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        <div className="flex items-center space-x-3 w-full sm:w-auto">
+                                            <div className="w-10 h-10 rounded-full bg-drblue-500 text-white font-bold flex items-center justify-center text-lg shadow">
+                                                {selectedVehicle.sellerName.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] uppercase font-bold text-drred-500">Vendedor Verificado RD</span>
+                                                <h5 className="font-bold text-slate-900 text-sm">{selectedVehicle.sellerName}</h5>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                                            <a 
+                                                href={`tel:${selectedVehicle.sellerPhone}`}
+                                                className="flex-1 sm:flex-none py-2.5 px-4 bg-drblue-500 hover:bg-drblue-600 text-white rounded-lg text-xs font-bold transition text-center"
+                                            >
+                                                <i className="fa-solid fa-phone mr-1"></i>Llamar
+                                            </a>
+                                            <a 
+                                                href={getWhatsAppLink(selectedVehicle)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex-1 sm:flex-none py-2.5 px-5 bg-whatsapp-500 hover:bg-whatsapp-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center space-x-2 shadow"
+                                            >
+                                                <i className="fa-brands fa-whatsapp text-base"></i>
+                                                <span>Contactar por WhatsApp</span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {}
+                    <footer className="bg-drblue-500 text-slate-200 text-xs py-8 border-t-4 border-drred-500">
+                        <div className="max-w-7xl mx-auto px-4 text-center">
+                            <p className="font-bold text-white text-base mb-2">vendetucarro<span className="text-drred-500">.com.do</span> 🇩🇴</p>
+                            <p className="mb-4 text-slate-300">El portal patriótico para comprar y vender vehículos usados en República Dominicana.</p>
+                            <p className="text-slate-400">© 2026 vendetucarro.com.do - Todos los derechos reservados.</p>
+                        </div>
+                    </footer>
+
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
